@@ -1,0 +1,732 @@
+{
+    "giant ant": {},
+    "killer bee": {
+        "POISON_RES": 0.5,
+        "POISONOUS": 0.8
+    },
+    "soldier ant": {
+        "POISON_RES": 0.4,
+        "POISONOUS": 0.8
+    },
+    "fire ant": {
+        "FIRE_RES": 0.4
+    },
+    "giant beetle": {
+        "POISON_RES": 0.4,
+        "POISONOUS": 0.8
+    },
+    "queen bee": {
+        "POISON_RES": 0.8,
+        "POISONOUS": 0.8
+    },
+    "acid blob": {
+        "ACIDIC": 1
+    },
+    "quivering blob": {
+        "POISON_RES": 0.4,
+        "ACIDIC": 1
+    },
+    "gelatinous cube": {
+        "FIRE_RES": 0.13333333333333333,
+        "COLD_RES": 0.13333333333333333,
+        "SHOCK_RES": 0.13333333333333333,
+        "SLEEP_RES": 0.13333333333333333,
+        "ACIDIC": 1
+    },
+    "chickatrice": {
+        "PETRIFY": 1
+    },
+    "cockatrice": {
+        "PETRIFY": 1
+    },
+    "pyrolisk": {
+        "POISON_RES": 0.26666666666666666,
+        "FIRE_RES": 0.26666666666666666
+    },
+    "jackal": {},
+    "fox": {},
+    "coyote": {},
+    "werejackal": {},
+    "little dog": {},
+    "dingo": {},
+    "dog": {},
+    "large dog": {},
+    "wolf": {},
+    "werewolf": {},
+    "winter wolf cub": {
+        "COLD_RES": 0.4666666666666667
+    },
+    "warg": {},
+    "winter wolf": {
+        "COLD_RES": 0.6
+    },
+    "hell hound pup": {
+        "FIRE_RES": 0.6
+    },
+    "hell hound": {
+        "FIRE_RES": 0.9333333333333333
+    },
+    "gas spore": {},
+    "floating eye": {
+        "TELEPAT": 0.2
+    },
+    "freezing sphere": {
+        "COLD_RES": 0.5333333333333333
+    },
+    "flaming sphere": {
+        "FIRE_RES": 0.5333333333333333
+    },
+    "shocking sphere": {
+        "SHOCK_RES": 0.5333333333333333
+    },
+    "beholder": {},
+    "kitten": {},
+    "housecat": {},
+    "jaguar": {},
+    "lynx": {},
+    "panther": {},
+    "large cat": {},
+    "tiger": {},
+    "gremlin": {
+        "POISON_RES": 0.5333333333333333,
+        "POISONOUS": 0.8
+    },
+    "gargoyle": {},
+    "winged gargoyle": {},
+    "hobbit": {},
+    "dwarf": {},
+    "bugbear": {},
+    "dwarf lord": {},
+    "dwarf king": {},
+    "mind flayer": {
+        "INT": 0.5,
+        "TELEPAT": 0.5
+    },
+    "master mind flayer": {
+        "INT": 0.5,
+        "TELEPAT": 0.5
+    },
+    "manes": {},
+    "homunculus": {
+        "SLEEP_RES": 0.1,
+        "POISON_RES": 0.1,
+        "POISONOUS": 0.8
+    },
+    "imp": {},
+    "lemure": {
+        "SLEEP_RES": 0.3333333333333333
+    },
+    "quasit": {
+        "POISON_RES": 0.4666666666666667
+    },
+    "tengu": {
+        "POISON_RES": 0.15555555555555556,
+        "TELEPORT_CONTROL": 0.19444444444444445
+    },
+    "blue jelly": {
+        "COLD_RES": 0.16666666666666666,
+        "POISON_RES": 0.16666666666666666
+    },
+    "spotted jelly": {
+        "ACIDIC": 1
+    },
+    "ochre jelly": {
+        "ACIDIC": 1
+    },
+    "kobold": {
+        "POISONOUS": 0.8
+    },
+    "large kobold": {
+        "POISONOUS": 0.8
+    },
+    "kobold lord": {
+        "POISONOUS": 0.8
+    },
+    "kobold shaman": {
+        "POISONOUS": 0.8
+    },
+    "leprechaun": {},
+    "small mimic": {},
+    "large mimic": {},
+    "giant mimic": {},
+    "wood nymph": {},
+    "water nymph": {},
+    "mountain nymph": {},
+    "goblin": {},
+    "hobgoblin": {},
+    "orc": {},
+    "hill orc": {},
+    "mordor orc": {},
+    "uruk-hai": {},
+    "orc shaman": {},
+    "orc-captain": {},
+    "rock piercer": {},
+    "iron piercer": {},
+    "glass piercer": {},
+    "rothe": {},
+    "mumak": {},
+    "leocrotta": {},
+    "wumpus": {},
+    "titanothere": {},
+    "baluchitherium": {},
+    "mastodon": {},
+    "sewer rat": {},
+    "giant rat": {},
+    "rabid rat": {
+        "POISONOUS": 0.8
+    },
+    "wererat": {},
+    "rock mole": {},
+    "woodchuck": {},
+    "cave spider": {
+        "POISON_RES": 0.2
+    },
+    "centipede": {
+        "POISON_RES": 0.26666666666666666
+    },
+    "giant spider": {
+        "POISON_RES": 0.4666666666666667,
+        "POISONOUS": 0.8
+    },
+    "scorpion": {
+        "POISON_RES": 0.65,
+        "POISONOUS": 0.8
+    },
+    "lurker above": {},
+    "trapper": {},
+    "pony": {},
+    "white unicorn": {
+        "POISON_RES": 0.4
+    },
+    "gray unicorn": {
+        "POISON_RES": 0.4
+    },
+    "black unicorn": {
+        "POISON_RES": 0.4
+    },
+    "horse": {},
+    "warhorse": {},
+    "fog cloud": {},
+    "dust vortex": {},
+    "ice vortex": {},
+    "energy vortex": {},
+    "steam vortex": {},
+    "fire vortex": {},
+    "baby long worm": {},
+    "baby purple worm": {},
+    "long worm": {},
+    "purple worm": {},
+    "grid bug": {},
+    "xan": {
+        "POISON_RES": 0.6,
+        "POISONOUS": 0.8
+    },
+    "yellow light": {},
+    "black light": {},
+    "zruty": {},
+    "couatl": {},
+    "aleax": {},
+    "angel": {},
+    "ki-rin": {},
+    "archon": {},
+    "bat": {},
+    "giant bat": {},
+    "raven": {},
+    "vampire bat": {
+        "POISONOUS": 0.8
+    },
+    "plains centaur": {},
+    "forest centaur": {},
+    "mountain centaur": {},
+    "baby gray dragon": {},
+    "baby silver dragon": {},
+    "baby shimmering dragon": {},
+    "baby red dragon": {},
+    "baby white dragon": {},
+    "baby orange dragon": {},
+    "baby black dragon": {},
+    "baby blue dragon": {},
+    "baby green dragon": {
+        "POISONOUS": 0.8
+    },
+    "baby yellow dragon": {
+        "ACIDIC": 1
+    },
+    "gray dragon": {},
+    "silver dragon": {},
+    "shimmering dragon": {},
+    "red dragon": {
+        "FIRE_RES": 1
+    },
+    "white dragon": {
+        "COLD_RES": 1
+    },
+    "orange dragon": {
+        "SLEEP_RES": 1
+    },
+    "black dragon": {
+        "DISINT_RES": 1
+    },
+    "blue dragon": {
+        "SHOCK_RES": 1
+    },
+    "green dragon": {
+        "POISON_RES": 1,
+        "POISONOUS": 0.8
+    },
+    "yellow dragon": {
+        "ACIDIC": 1
+    },
+    "stalker": {
+        "STUNNED": 1,
+        "INVIS": 0.6
+    },
+    "air elemental": {},
+    "fire elemental": {},
+    "earth elemental": {},
+    "water elemental": {},
+    "lichen": {},
+    "brown mold": {
+        "COLD_RES": 0.06666666666666667,
+        "POISON_RES": 0.06666666666666667
+    },
+    "yellow mold": {
+        "POISON_RES": 0.06666666666666667,
+        "POISONOUS": 0.8,
+        "HALLUC": 1
+    },
+    "green mold": {
+        "ACIDIC": 1
+    },
+    "red mold": {
+        "FIRE_RES": 0.06666666666666667,
+        "POISON_RES": 0.06666666666666667
+    },
+    "shrieker": {
+        "POISON_RES": 0.13333333333333333
+    },
+    "violet fungus": {
+        "POISON_RES": 0.3333333333333333,
+        "HALLUC": 1
+    },
+    "gnome": {},
+    "gnome lord": {},
+    "gnomish wizard": {},
+    "gnome king": {},
+    "giant": {
+        "STR": 1
+    },
+    "stone giant": {
+        "STR": 1
+    },
+    "hill giant": {
+        "STR": 1
+    },
+    "fire giant": {
+        "FIRE_RES": 0.7333333333333333,
+        "STR": 1
+    },
+    "frost giant": {
+        "COLD_RES": 0.8666666666666667,
+        "STR": 1
+    },
+    "ettin": {},
+    "storm giant": {
+        "SHOCK_RES": 1,
+        "STR": 1
+    },
+    "titan": {
+        "STR": 1
+    },
+    "minotaur": {},
+    "jabberwock": {},
+    "vorpal jabberwock": {},
+    "keystone kop": {},
+    "kop sergeant": {},
+    "kop lieutenant": {},
+    "kop kaptain": {},
+    "lich": {
+        "COLD_RES": 0.9333333333333333,
+        "FOOD_POISONING": 0.4
+    },
+    "demilich": {
+        "COLD_RES": 1,
+        "FOOD_POISONING": 0.4
+    },
+    "master lich": {
+        "FIRE_RES": 0.7,
+        "COLD_RES": 0.7,
+        "FOOD_POISONING": 0.4
+    },
+    "arch-lich": {
+        "FIRE_RES": 0.9666666666666667,
+        "COLD_RES": 0.9666666666666667,
+        "FOOD_POISONING": 0.4
+    },
+    "kobold mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "gnome mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "orc mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "dwarf mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "elf mummy": {
+        "SLEEP_RES": 0.4666666666666667,
+        "FOOD_POISONING": 0.4
+    },
+    "human mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "ettin mummy": {
+        "FOOD_POISONING": 0.4
+    },
+    "giant mummy": {
+        "FOOD_POISONING": 0.4,
+        "STR": 1
+    },
+    "red naga hatchling": {
+        "FIRE_RES": 0.13333333333333333,
+        "POISON_RES": 0.13333333333333333
+    },
+    "black naga hatchling": {
+        "POISON_RES": 0.26666666666666666,
+        "ACIDIC": 1
+    },
+    "golden naga hatchling": {
+        "POISON_RES": 0.26666666666666666
+    },
+    "guardian naga hatchling": {
+        "POISON_RES": 0.26666666666666666
+    },
+    "red naga": {
+        "FIRE_RES": 0.26666666666666666,
+        "POISON_RES": 0.26666666666666666
+    },
+    "black naga": {
+        "POISON_RES": 0.6666666666666666,
+        "ACIDIC": 1
+    },
+    "golden naga": {
+        "POISON_RES": 0.8666666666666667
+    },
+    "guardian naga": {
+        "POISON_RES": 1.0666666666666667,
+        "POISONOUS": 0.8
+    },
+    "ogre": {},
+    "ogre lord": {},
+    "ogre king": {},
+    "gray ooze": {
+        "FIRE_RES": 0.08888888888888889,
+        "COLD_RES": 0.08888888888888889,
+        "POISON_RES": 0.08888888888888889,
+        "ACIDIC": 1
+    },
+    "brown pudding": {
+        "COLD_RES": 0.13333333333333333,
+        "SHOCK_RES": 0.13333333333333333,
+        "POISON_RES": 0.13333333333333333,
+        "ACIDIC": 1
+    },
+    "green slime": {
+        "ACIDIC": 1,
+        "POISONOUS": 0.8
+    },
+    "black pudding": {
+        "COLD_RES": 0.26666666666666666,
+        "SHOCK_RES": 0.26666666666666666,
+        "POISON_RES": 0.26666666666666666,
+        "ACIDIC": 1
+    },
+    "quantum mechanic": {
+        "POISONOUS": 0.8,
+        "FAST": 0.6
+    },
+    "rust monster": {},
+    "disenchanter": {},
+    "garter snake": {},
+    "snake": {
+        "POISON_RES": 0.4,
+        "POISONOUS": 0.8
+    },
+    "water moccasin": {
+        "POISON_RES": 0.4666666666666667,
+        "POISONOUS": 0.8
+    },
+    "python": {},
+    "pit viper": {
+        "POISON_RES": 0.6,
+        "POISONOUS": 0.8
+    },
+    "cobra": {
+        "POISON_RES": 0.6666666666666666,
+        "POISONOUS": 0.8
+    },
+    "troll": {},
+    "ice troll": {
+        "COLD_RES": 0.8
+    },
+    "rock troll": {},
+    "water troll": {},
+    "olog-hai": {},
+    "umber hulk": {},
+    "vampire": {
+        "FOOD_POISONING": 0.4
+    },
+    "vampire lord": {
+        "FOOD_POISONING": 0.4
+    },
+    "vampire mage": {
+        "FOOD_POISONING": 0.4
+    },
+    "vlad the impaler": {},
+    "barrow wight": {},
+    "wraith": {},
+    "nazgul": {},
+    "xorn": {},
+    "monkey": {},
+    "ape": {},
+    "owlbear": {},
+    "yeti": {
+        "COLD_RES": 0.4666666666666667
+    },
+    "carnivorous ape": {},
+    "sasquatch": {},
+    "kobold zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "gnome zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "orc zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "dwarf zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "elf zombie": {
+        "SLEEP_RES": 0.26666666666666666,
+        "FOOD_POISONING": 0.4
+    },
+    "human zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "ettin zombie": {
+        "FOOD_POISONING": 0.4
+    },
+    "ghoul": {
+        "FOOD_POISONING": 0.4
+    },
+    "giant zombie": {
+        "FOOD_POISONING": 0.4,
+        "STR": 1
+    },
+    "skeleton": {},
+    "straw golem": {},
+    "paper golem": {},
+    "rope golem": {},
+    "gold golem": {},
+    "leather golem": {},
+    "wood golem": {},
+    "flesh golem": {
+        "FIRE_RES": 0.13333333333333333,
+        "COLD_RES": 0.13333333333333333,
+        "SHOCK_RES": 0.13333333333333333,
+        "SLEEP_RES": 0.13333333333333333,
+        "POISON_RES": 0.13333333333333333
+    },
+    "clay golem": {},
+    "stone golem": {},
+    "glass golem": {},
+    "iron golem": {},
+    "human": {},
+    "elf": {
+        "SLEEP_RES": 0.8
+    },
+    "woodland-elf": {
+        "SLEEP_RES": 0.4
+    },
+    "green-elf": {
+        "SLEEP_RES": 0.4666666666666667
+    },
+    "grey-elf": {
+        "SLEEP_RES": 0.5333333333333333
+    },
+    "elf-lord": {
+        "SLEEP_RES": 0.7333333333333333
+    },
+    "elvenking": {
+        "SLEEP_RES": 0.7333333333333333
+    },
+    "doppelganger": {
+        "POLYMORPH": 1
+    },
+    "shopkeeper": {},
+    "guard": {},
+    "prisoner": {},
+    "oracle": {},
+    "aligned priest": {},
+    "high priest": {},
+    "soldier": {},
+    "sergeant": {},
+    "nurse": {
+        "POISON_RES": 0.73
+    },
+    "lieutenant": {},
+    "captain": {},
+    "watchman": {},
+    "watch captain": {},
+    "medusa": {
+        "PETRIFY": 0.8
+    },
+    "wizard of yendor": {
+        "FIRE_RES": 0.5666666666666667,
+        "POISON_RES": 0.5666666666666667,
+        "TELEPORT_CONTROL": 0.7083333333333334
+    },
+    "croesus": {},
+    "charon": {},
+    "ghost": {},
+    "shade": {},
+    "water demon": {},
+    "succubus": {},
+    "horned devil": {},
+    "incubus": {},
+    "erinys": {},
+    "barbed devil": {},
+    "marilith": {},
+    "vrock": {},
+    "hezrou": {},
+    "bone devil": {},
+    "ice devil": {},
+    "nalfeshnee": {},
+    "pit fiend": {},
+    "sandestin": {},
+    "balrog": {},
+    "juiblex": {},
+    "yeenoghu": {},
+    "orcus": {},
+    "geryon": {},
+    "dispater": {},
+    "baalzebub": {},
+    "asmodeus": {},
+    "demogorgon": {},
+    "death": {},
+    "pestilence": {},
+    "famine": {},
+    "mail daemon": {},
+    "djinni": {},
+    "jellyfish": {
+        "POISON_RES": 0.3333333333333333,
+        "POISONOUS": 0.8
+    },
+    "piranha": {},
+    "shark": {},
+    "giant eel": {},
+    "electric eel": {
+        "SHOCK_RES": 0.6666666666666666
+    },
+    "kraken": {},
+    "newt": {},
+    "gecko": {},
+    "iguana": {},
+    "baby crocodile": {},
+    "lizard": {},
+    "chameleon": {
+        "POLYMORPH": 1
+    },
+    "crocodile": {},
+    "salamander": {
+        "FIRE_RES": 0.8,
+        "POISONOUS": 0.8
+    },
+    "long worm tail": {},
+    "archeologist": {},
+    "barbarian": {},
+    "caveman": {},
+    "cavewoman": {},
+    "healer": {},
+    "knight": {},
+    "monk": {},
+    "priest": {},
+    "priestess": {},
+    "ranger": {},
+    "rogue": {},
+    "samurai": {},
+    "tourist": {},
+    "valkyrie": {},
+    "wizard": {},
+    "lord carnarvon": {},
+    "pelias": {},
+    "shaman karnov": {},
+    "hippocrates": {},
+    "king arthur": {},
+    "grand master": {},
+    "arch priest": {},
+    "orion": {},
+    "master of thieves": {},
+    "lord sato": {},
+    "twoflower": {},
+    "norn": {},
+    "neferet the green": {},
+    "minion of huhetotl": {},
+    "thoth amon": {},
+    "chromatic dragon": {
+        "FIRE_RES": 0.2555555555555556,
+        "COLD_RES": 0.2555555555555556,
+        "SLEEP_RES": 0.2555555555555556,
+        "DISINT_RES": 0.2555555555555556,
+        "SHOCK_RES": 0.2555555555555556,
+        "POISON_RES": 0.2555555555555556,
+        "POISONOUS": 0.8
+    },
+    "goblin king": {},
+    "cyclops": {
+        "STR": 1
+    },
+    "ixoth": {
+        "FIRE_RES": 1
+    },
+    "master kaen": {
+        "POISON_RES": 2.066666666666667
+    },
+    "nalzok": {},
+    "scorpius": {
+        "POISON_RES": 1,
+        "POISONOUS": 0.8
+    },
+    "master assassin": {},
+    "ashikaga takauji": {},
+    "lord surtur": {
+        "FIRE_RES": 1,
+        "STR": 1
+    },
+    "dark one": {},
+    "student": {},
+    "chieftain": {},
+    "neanderthal": {},
+    "attendant": {},
+    "page": {},
+    "abbot": {
+        "HALLUC": 1
+    },
+    "acolyte": {},
+    "hunter": {},
+    "thug": {},
+    "ninja": {},
+    "roshi": {},
+    "guide": {},
+    "warrior": {},
+    "apprentice": {},
+    "earendil": {
+        "SLEEP_RES": 1
+    },
+    "high-elf": {
+        "SLEEP_RES": 0.47
+    }
+}
