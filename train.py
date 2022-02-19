@@ -5,13 +5,13 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-def train(env, model, train_steps=1e5, replay_size=1e4, train_start=500, batch_size=4, eps=1, esp_decay=.9999, eps_min=.1, smooth=100):
-    optim = torch.optim.Adam(model.q.parameters(), lr=1e-4)
+def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, 
+          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, smooth=100):
+    optim = torch.optim.Adam(model.monster_encoder.parameters(), lr=1e-4)
 
-    losses = []
     returns = []
     replay = deque(maxlen=int(replay_size))
-    for _ in tqdm(range(int(train_steps))):
+    for train_step in tqdm(range(int(train_steps))):
         obs = env.reset()
         
         if random.random() < eps:
@@ -39,12 +39,9 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=500, batch_s
             loss.backward()
             optim.step()
 
-            losses.append(loss.item())
-
-        if len(returns) > smooth:
-            graph("returns.png", returns, smooth)
-        if len(losses) > smooth:
-            graph("losses.png", losses, smooth)
+        if train_step % smooth == 0:
+            if len(returns) > smooth:
+                graph("returns.png", returns, smooth)
 
 
 def calculate_loss(model, obs, action, reward):
@@ -87,6 +84,6 @@ def prepare_obs(obs):
 
 def graph(path, data, smooth):
     plt.clf()
-    data = [sum(data[d:d+smooth]) / smooth for d in range(len(data) - smooth)]
+    data = [sum(data[d:d+smooth]) / smooth for d in range(0, len(data) - smooth, smooth)]
     plt.plot(data)
     plt.savefig(path)
