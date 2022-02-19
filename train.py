@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 
 
-def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=100,
+def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=1000,
           batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, smooth=100):
 
     optim = torch.optim.Adam(model.monster_encoder.parameters(), lr=1e-4)
-    target_model = deepcopy(model) if env.feature == "qa" else None
+    target_model = deepcopy(model) if env.feature in ["qa", "truth"] else None
 
     returns = []
     replay = deque(maxlen=int(replay_size))
@@ -44,8 +44,8 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
             loss.backward()
             optim.step()
             
-        if train_step % target_update == 0 and env.feature == "qa":
-            target_model = deepcopy(model)
+        if train_step % target_update == 0 and env.feature in ["qa", "truth"]:
+            target_model.load_state_dict(model.state_dict())
 
         returns.append(reward)
         if train_step % smooth == 0:
@@ -63,8 +63,8 @@ def calculate_loss(model, target_model, obs, action, reward, dones, next_observa
     if target_model is None:
         target = reward
     else:
-        next_qs = target_model(next_observations)
-        target = reward + .9 * torch.max(next_qs, dim=1)[0]
+        next_qs = target_model(next_observations).detach()
+        target = reward + .9 * torch.max(next_qs, dim=1)[0] * (1 - dones)
 
     return torch.mean((qs - target) ** 2)
 

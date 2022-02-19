@@ -13,16 +13,14 @@ class OneHotQ(nn.Module):
         self.goal_size = goal_size
         self.out_size = 2
         self.device = device
-        hidden_size = 100
+        hidden_size = 32
 
         self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size + self.monster_size, hidden_size),
+            nn.Linear(self.goal_size + self.monster_size * 2, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, 1)
+            nn.Linear(hidden_size, self.out_size)
         ).to(device)
 
     def forward(self, obs):
@@ -30,31 +28,25 @@ class OneHotQ(nn.Module):
         monster1_id = F.one_hot(torch.tensor(obs["monster1_id"]).long(), num_classes=self.monster_size).to(self.device)
         monster2_id = F.one_hot(torch.tensor(obs["monster2_id"]).long(), num_classes=self.monster_size).to(self.device)
         
-        monster1 = self.monster_encoder(torch.cat((goal, monster1_id), dim=-1).float())
-        monster2 = self.monster_encoder(torch.cat((goal, monster2_id), dim=-1).float())
-
-        return torch.cat((monster1, monster2), dim=-1)
+        return self.monster_encoder(torch.cat((goal, monster1_id, monster2_id), dim=-1).float())
 
 
 class BERTQ(nn.Module):
-    def __init__(self, monster_size, goal_size, info_size, device="cuda"):
+    def __init__(self, monster_size, goal_size, device="cuda"):
         super().__init__()
 
         self.monster_size = monster_size
         self.goal_size = goal_size
-        self.info_size = info_size
         self.out_size = 2
         self.device = device
-        hidden_size = 100
+        hidden_size = 32
 
         self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size + self.info_size, hidden_size),
+            nn.Linear(self.goal_size + self.monster_size * 2, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, 1)
+            nn.Linear(hidden_size, self.out_size)
         ).to(device)
 
     def forward(self, obs):
@@ -63,25 +55,20 @@ class BERTQ(nn.Module):
         monster1_info = torch.tensor(np.array(obs["monster1_info"])).to(self.device)
         monster2_info = torch.tensor(np.array(obs["monster2_info"])).to(self.device)
 
-        monster1 = self.monster_encoder(torch.cat((goal, monster1_info), dim=-1).float())
-        monster2 = self.monster_encoder(torch.cat((goal, monster2_info), dim=-1).float())
-
-        return torch.cat((monster1, monster2), dim=-1)
+        return self.monster_encoder(torch.cat((goal, monster1_info, monster2_info), dim=-1).float())
         
 
 class QuestionAnswerQ(nn.Module):
-    def __init__(self, goal_size, device="cuda"):
+    def __init__(self, goal_size, device="cuda", out_size=None):
         super().__init__()
 
         self.goal_size = goal_size
-        self.out_size = 2 + 2 * self.goal_size
+        self.out_size = 2 + 2 * self.goal_size if out_size is None else out_size
         self.device = device
-        hidden_size = 100
+        hidden_size = 32
 
         self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size * 3, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
+            nn.Linear(self.goal_size * 5, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),
