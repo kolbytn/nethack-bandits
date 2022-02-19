@@ -13,6 +13,8 @@ if __name__ == "__main__":
     env = MonsterEnv(feature=args.feature)
     if args.feature == "bert":
         model = BERTQ(len(env.monsters), len(env.effects), env.model.config.hidden_size)
+    elif args.feature == "qa":
+        model = QuestionAnswerQ(len(env.effects))
     else:
         model = OneHotQ(len(env.monsters), len(env.effects))
     train(env, model)

@@ -11,6 +11,7 @@ class OneHotQ(nn.Module):
 
         self.monster_size = monster_size
         self.goal_size = goal_size
+        self.out_size = 2
         self.device = device
         hidden_size = 100
 
@@ -42,6 +43,7 @@ class BERTQ(nn.Module):
         self.monster_size = monster_size
         self.goal_size = goal_size
         self.info_size = info_size
+        self.out_size = 2
         self.device = device
         hidden_size = 100
 
@@ -67,32 +69,29 @@ class BERTQ(nn.Module):
         return torch.cat((monster1, monster2), dim=-1)
         
 
-class UnifiedQ(nn.Module):
+class QuestionAnswerQ(nn.Module):
     def __init__(self, goal_size, device="cuda"):
         super().__init__()
 
         self.goal_size = goal_size
+        self.out_size = 2 + 2 * self.goal_size
         self.device = device
+        hidden_size = 100
 
-        self.tokenizer = T5Tokenizer.from_pretrained("allenai/unifiedqa-t5-base")
-        self.unified = T5ForConditionalGeneration.from_pretrained("allenai/unifiedqa-t5-base").to(self.device)
-        self.unified.requires_grad = False
-
-        self.q = nn.Sequential(
-            nn.Linear(self.bert.config.hidden_size * 2 + self.goal_size, 512),
+        self.monster_encoder = nn.Sequential(
+            nn.Linear(self.goal_size * 3, hidden_size),
             nn.ReLU(),
-            nn.Linear(512, 2)
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, hidden_size),
+            nn.ReLU(),
+            nn.Linear(hidden_size, self.out_size)
         ).to(device)
 
     def forward(self, obs):
         goal = F.one_hot(torch.tensor(obs["goal"]).long(), num_classes=self.goal_size).to(self.device)
         
-        monster1 = self.tokenizer(obs["monster1"], return_tensors="pt", padding=True, truncation=True).to(self.device)
-        monster1 = self.bert(**monster1).last_hidden_state[:, 0]
-        
-        monster2 = self.tokenizer(obs["monster2"], return_tensors="pt", padding=True, truncation=True).to(self.device)
-        monster2 = self.bert(**monster2).last_hidden_state[:, 0]
+        monster1_qa = torch.tensor(np.array(obs["monster1_qa"])).to(self.device)
+        monster2_qa = torch.tensor(np.array(obs["monster2_qa"])).to(self.device)
 
-        x = torch.cat((goal, monster1, monster2), dim=-1)
-
-        return self.q(x)
+        return self.monster_encoder(torch.cat((goal, monster1_qa, monster2_qa), dim=-1).float())
