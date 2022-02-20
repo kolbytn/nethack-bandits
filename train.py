@@ -7,12 +7,13 @@ from copy import deepcopy
 
 
 def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=1000,
-          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, smooth=100):
+          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, eval_freq=1, smooth=1000):
 
     optim = torch.optim.Adam(model.monster_encoder.parameters(), lr=1e-4)
     target_model = deepcopy(model) if env.feature in ["qa", "truth"] else None
 
     returns = []
+    eval_returns = []
     replay = deque(maxlen=int(replay_size))
     for train_step in tqdm(range(int(train_steps))):
         obs = env.reset()
@@ -32,6 +33,19 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
             replay.append((obs, action, reward, done, next_obs))
             obs = next_obs
 
+        returns.append(reward)
+
+        if train_step % eval_freq == 0:
+            obs = env.reset(eval=True)
+            done = False
+            while not done:
+                prepared_obs = prepare_obs(obs)
+                model.eval()
+                qs = model(prepared_obs)
+                action = torch.argmax(qs).item()
+                obs, reward, done, _ = env.step(action)
+            eval_returns.append(reward)
+
         if eps > eps_min:
             eps *= esp_decay
 
@@ -47,10 +61,11 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
         if train_step % target_update == 0 and env.feature in ["qa", "truth"]:
             target_model.load_state_dict(model.state_dict())
 
-        returns.append(reward)
         if train_step % smooth == 0:
             if len(returns) > smooth:
-                graph("returns.png", returns, smooth)
+                graph("returns_{}.png".format(env.feature), returns, smooth)
+            if len(eval_returns) > smooth:
+                graph("eval_returns_{}.png".format(env.feature), eval_returns, smooth)
 
 
 def calculate_loss(model, target_model, obs, action, reward, dones, next_observations):
@@ -105,5 +120,5 @@ def prepare_obs(obs):
 def graph(path, data, smooth):
     plt.clf()
     data = [sum(data[d:d+smooth]) / smooth for d in range(0, len(data) - smooth, smooth)]
-    plt.plot(data)
+    plt.plot(list(range(smooth, (len(data)+1)*smooth, smooth)), data)
     plt.savefig(path)
