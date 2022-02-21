@@ -31,7 +31,7 @@ class OneHotQ(nn.Module):
         return self.monster_encoder(torch.cat((goal, monster1_id, monster2_id), dim=-1).float())
 
 
-class BERTQ(nn.Module):
+class LMQ(nn.Module):
     def __init__(self, monster_size, goal_size, device="cuda"):
         super().__init__()
 
@@ -68,7 +68,7 @@ class QuestionAnswerQ(nn.Module):
         hidden_size = 32
 
         self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size * 5, hidden_size),
+            nn.Linear(self.goal_size * 13, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),

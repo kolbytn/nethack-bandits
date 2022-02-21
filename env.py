@@ -2,7 +2,7 @@ import json
 from functools import lru_cache
 import numpy as np
 import torch
-from transformers import BertTokenizer, BertModel, T5Tokenizer, T5ForConditionalGeneration
+from transformers import BertTokenizer, BertModel, T5Tokenizer, T5ForConditionalGeneration, T5Model
 
 
 class MonsterEnv:
@@ -30,17 +30,19 @@ class MonsterEnv:
     NUM_MONSTERS = 388
     NUM_EFFECTS = 5
 
-    def __init__(self, device="cuda", feature="bert"):
+    def __init__(self, device="cuda", feature="bert", seed=42):
+        np.random.seed(seed)
 
         with open("corpses.json", "r") as f:
-            monster_data = json.load(f)
-        monster_names = list(monster_data.keys())
+            self.all_monsters = json.load(f)
+        monster_names = list(self.all_monsters.keys())
         np.random.shuffle(monster_names)
 
-        self.train_monsters = {k: v for k, v in monster_data.items() if k in monster_names[:int(self.NUM_MONSTERS * .8)]}
-        self.eval_monsters = {k: v for k, v in monster_data.items() if k in monster_names[int(self.NUM_MONSTERS * .8):]}
+        self.train_monsters = {k: v for k, v in self.all_monsters.items() if k in monster_names[:int(self.NUM_MONSTERS * .8)]}
+        self.eval_monsters = {k: v for k, v in self.all_monsters.items() if k in monster_names[int(self.NUM_MONSTERS * .8):]}
         self.train_effects = self.get_effects(self.train_monsters)
         self.eval_effects = self.get_effects(self.eval_monsters)
+        self.all_effects = self.get_effects(self.all_monsters)
         
         with open("wiki.json", "r") as f:
             self.wiki = json.load(f)
@@ -52,9 +54,13 @@ class MonsterEnv:
             self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
             self.model = BertModel.from_pretrained('bert-base-uncased', return_dict=True).to(device)
             self.model.requires_grad = False
+        elif self.feature == "t5":
+            self.tokenizer = T5Tokenizer.from_pretrained("t5-3b")
+            self.model = T5Model.from_pretrained("t5-3b", return_dict=True).to(device)
+            self.model.requires_grad = False
         elif self.feature == "qa" or self.feature == "full":
-            self.tokenizer = T5Tokenizer.from_pretrained("allenai/unifiedqa-t5-base")
-            self.model = T5ForConditionalGeneration.from_pretrained("allenai/unifiedqa-t5-base").to(device)
+            self.tokenizer = T5Tokenizer.from_pretrained("allenai/unifiedqa-t5-3b")
+            self.model = T5ForConditionalGeneration.from_pretrained("allenai/unifiedqa-t5-3b").to(device)
             self.model.requires_grad = False
         else:
             self.tokenizer = None
@@ -62,30 +68,28 @@ class MonsterEnv:
 
         self.monster_choices = None
         self.goal = None
-        self.curr_monsters = self.train_monsters
-        self.curr_effects = self.train_effects
-        self.queries = np.zeros((2, self.NUM_EFFECTS))
+        self.queries = np.zeros((2, self.NUM_EFFECTS, 5))
         self.queried = np.zeros((2, self.NUM_EFFECTS))
 
     def reset(self, eval=False):
         if eval:
-            self.curr_monsters = self.eval_monsters
-            self.curr_effects = self.eval_effects
+            curr_monsters = self.eval_monsters
+            curr_effects = self.eval_effects
         else:
-            self.curr_monsters = self.train_monsters
-            self.curr_effects = self.train_effects
+            curr_monsters = self.train_monsters
+            curr_effects = self.train_effects
 
-        self.goal = np.random.choice(list(self.curr_effects.keys()))
+        self.goal = np.random.choice(list(curr_effects.keys()))
         self.monster_choices = []
         self.monster_choices.append(
-            np.random.choice(list(self.curr_effects[self.goal].keys()))  # Add monster with effect
+            np.random.choice(list(curr_effects[self.goal].keys()))  # Add monster with effect
         )
         self.monster_choices.append(
-            np.random.choice([m for m in self.curr_monsters.keys() if m not in list(self.curr_effects[self.goal].keys())])
+            np.random.choice([m for m in curr_monsters.keys() if m not in list(curr_effects[self.goal].keys())])
         )
         np.random.shuffle(self.monster_choices)
 
-        self.queries = np.zeros((2, self.NUM_EFFECTS))
+        self.queries = np.zeros((2, self.NUM_EFFECTS, 5))
         self.queried = np.zeros((2, self.NUM_EFFECTS))
         if self.feature == "full" or self.feature == "full_truth":
             for m in range(2):
@@ -98,13 +102,13 @@ class MonsterEnv:
 
     def step(self, action):
         if action < 2:
-            reward = int(self.goal in self.curr_monsters[self.monster_choices[action]])
+            reward = int(self.goal in self.all_monsters[self.monster_choices[action]])
             done = True
 
         else:
             q = action - 2
-            m = int(q >= len(self.curr_effects))
-            e = q - len(self.curr_effects) if q >= len(self.curr_effects) else q
+            m = int(q >= self.NUM_EFFECTS)
+            e = q - self.NUM_EFFECTS if q >= self.NUM_EFFECTS else q
             self.query(m, e)
             
             reward = 0
@@ -131,18 +135,21 @@ class MonsterEnv:
 
     def prepare_obs(self):
         obs = {
-            "goal": list(self.curr_effects.keys()).index(self.goal),
+            "goal": list(self.all_effects.keys()).index(self.goal),
         }   
         
         if self.feature == "bert":
             obs["monster1_info"] = self.run_bert_model(self.monster_choices[0])
             obs["monster2_info"] = self.run_bert_model(self.monster_choices[1])
+        elif self.feature == "t5":
+            obs["monster1_info"] = self.run_t5_model(self.monster_choices[0])
+            obs["monster2_info"] = self.run_t5_model(self.monster_choices[1])
         elif self.feature in ["qa", "full", "truth", "full_truth"]:
-            obs["monster1_qa"] = np.concatenate((self.queried[0], self.queries[0]))
-            obs["monster2_qa"] = np.concatenate((self.queried[1], self.queries[1]))
+            obs["monster1_qa"] = np.concatenate((self.queried[0], self.queries[0].flatten()))
+            obs["monster2_qa"] = np.concatenate((self.queried[1], self.queries[1].flatten()))
         else:
-            obs["monster1_id"] = list(self.curr_monsters.keys()).index(self.monster_choices[0])
-            obs["monster2_id"] = list(self.curr_monsters.keys()).index(self.monster_choices[1])
+            obs["monster1_id"] = list(self.all_monsters.keys()).index(self.monster_choices[0])
+            obs["monster2_id"] = list(self.all_monsters.keys()).index(self.monster_choices[1])
 
         return obs
 
@@ -150,23 +157,58 @@ class MonsterEnv:
         self.queried[m][e] = 1
         if self.feature == "truth" or self.feature == "full_truth":
             monster = self.monster_choices[m]
-            effect = list(self.curr_effects.keys())[e]
-            self.queries[m][e] = int(effect in list(self.curr_monsters[monster].keys()))
+            effect = list(self.all_effects.keys())[e]
+            self.queries[m][e] = int(effect in list(self.all_monsters[monster].keys()))
         else:
             q = "What resistance does eating a {} corpse confer? \\n {}".format(
                 self.monster_choices[m],
                 self.wiki[self.monster_choices[m]]
             )        
             a = self.run_qa_model(q)
-            self.queries[m][e] = int(self.EFFECT2STR[list(self.curr_effects.keys())[e]] in a)
+            self.queries[m][e][0] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+            
+            q = "What does eating a {} corpse confer? \\n {}".format(
+                self.monster_choices[m],
+                self.wiki[self.monster_choices[m]]
+            )        
+            a = self.run_qa_model(q)
+            self.queries[m][e][1] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+            
+            q = "What does a {} confer? \\n {}".format(
+                self.monster_choices[m],
+                self.wiki[self.monster_choices[m]]
+            )        
+            a = self.run_qa_model(q)
+            self.queries[m][e][2] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+            
+            q = "What happens when you eat a {} corpse? \\n {}".format(
+                self.monster_choices[m],
+                self.wiki[self.monster_choices[m]]
+            )        
+            a = self.run_qa_model(q)
+            self.queries[m][e][3] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+            
+            q = "What resistance does eating a {} confer? \\n {}".format(
+                self.monster_choices[m],
+                self.wiki[self.monster_choices[m]]
+            )        
+            a = self.run_qa_model(q)
+            self.queries[m][e][4] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
         
 
-    @lru_cache(maxsize=NUM_MONSTERS)
+    @lru_cache(maxsize=NUM_MONSTERS*5)
     def run_qa_model(self, q):
         input_ids = self.tokenizer.encode(q, return_tensors="pt").to(self.device)
         res = self.model.generate(input_ids)
         a = self.tokenizer.batch_decode(res, skip_special_tokens=True)
         return a
+
+    @lru_cache(maxsize=NUM_MONSTERS)
+    def run_t5_model(self, monster):
+        with torch.no_grad():
+            monster_info = self.tokenizer(monster + "\n" + self.wiki[monster], return_tensors="pt").input_ids
+            monster_info = self.model(input_ids=monster_info.to(self.device), decoder_input_ids=monster_info.to(self.device))
+            return monster_info.last_hidden_state[0, 0].cpu().detach().numpy()
 
     @lru_cache(maxsize=NUM_MONSTERS)
     def run_bert_model(self, monster):

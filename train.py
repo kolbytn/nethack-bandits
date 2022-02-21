@@ -7,7 +7,8 @@ from copy import deepcopy
 
 
 def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=1000,
-          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, eval_freq=1, smooth=1000):
+          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, eval_freq=1, smooth=1000, seed=42):
+    random.seed(seed)
 
     optim = torch.optim.Adam(model.monster_encoder.parameters(), lr=1e-4)
     target_model = deepcopy(model) if env.feature in ["qa", "truth"] else None
@@ -63,9 +64,11 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
 
         if train_step % smooth == 0:
             if len(returns) > smooth:
-                graph("returns_{}.png".format(env.feature), returns, smooth)
+                graph("returns_{}_{}.png".format(env.feature, seed), returns, smooth)
+                log("returns_{}_{}.txt".format(env.feature, seed), returns)
             if len(eval_returns) > smooth:
-                graph("eval_returns_{}.png".format(env.feature), eval_returns, smooth)
+                graph("eval_returns_{}_{}.png".format(env.feature, seed), eval_returns, smooth)
+                log("eval_returns_{}_{}.txt".format(env.feature, seed), eval_returns)
 
 
 def calculate_loss(model, target_model, obs, action, reward, dones, next_observations):
@@ -122,3 +125,9 @@ def graph(path, data, smooth):
     data = [sum(data[d:d+smooth]) / smooth for d in range(0, len(data) - smooth, smooth)]
     plt.plot(list(range(smooth, (len(data)+1)*smooth, smooth)), data)
     plt.savefig(path)
+
+
+def log(path, data):
+    with open(path, "w") as f:
+        for d in data:
+            f.write(str(d) + "\n")
