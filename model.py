@@ -131,17 +131,17 @@ class LMQ(nn.Module):
         
 
 class QuestionAnswerQ(nn.Module):
-    def __init__(self, goal_size, device="cuda", out_size=None, seed=42):
+    def __init__(self, goal_size, q_size, device="cuda", out_size=None, seed=42):
         super().__init__()
         torch.random.manual_seed(seed)
 
         self.goal_size = goal_size
-        self.out_size = 2 + 2 * self.goal_size if out_size is None else out_size
+        self.out_size = 2 + 2 * q_size * self.goal_size if out_size is None else out_size
         self.device = device
         hidden_size = 32
 
         self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size * 13, hidden_size),
+            nn.Linear(self.goal_size * q_size * 4 + self.goal_size, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
             nn.ReLU(),

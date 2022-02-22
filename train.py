@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 from copy import deepcopy
 
 
-def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=1000,
-          batch_size=8, eps=1, esp_decay=.9999, eps_min=.1, eval_freq=1, smooth=1000, seed=42):
+def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target_update=1000, max_steps=None,
+          batch_size=8, eps=1, eps_decay=.9999, eps_min=.1, eval_freq=1, smooth=1000, seed=42):
     random.seed(seed)
+    if max_steps is None:
+        max_steps = len(env.QUESTIONS) * env.NUM_EFFECTS * 2 + 1
 
     optim = torch.optim.Adam(model.monster_encoder.parameters(), lr=1e-4)
     target_model = deepcopy(model) if env.feature in ["qa", "truth"] else None
@@ -19,13 +21,13 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
     for train_step in tqdm(range(int(train_steps))):
         obs = env.reset()
         
-        for _ in range(100):
+        for _ in range(max_steps):
             if random.random() < eps:
                 action = random.randint(0, model.out_size - 1)
             else:
                 prepared_obs = prepare_obs(obs)
                 model.eval()
-                qs = model(prepared_obs)
+                qs = model(prepared_obs).squeeze(0)
                 action = torch.argmax(qs).item()
 
             next_obs, reward, done, _ = env.step(action)
@@ -40,10 +42,10 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
 
         if train_step % eval_freq == 0:
             obs = env.reset(eval=True)
-            for _ in range(100):
+            for _ in range(max_steps):
                 prepared_obs = prepare_obs(obs)
                 model.eval()
-                qs = model(prepared_obs)
+                qs = model(prepared_obs).squeeze(0)
                 action = torch.argmax(qs).item()
                 obs, reward, done, _ = env.step(action)
                 if done:
@@ -51,7 +53,7 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
             eval_returns.append(reward)
 
         if eps > eps_min:
-            eps *= esp_decay
+            eps *= eps_decay
 
         if len(replay) > train_start:
             batch = random.sample(replay, batch_size)
@@ -85,7 +87,7 @@ def calculate_loss(model, target_model, obs, action, reward, dones, next_observa
         target = reward
     else:
         next_qs = target_model(next_observations).detach()
-        target = reward + .9 * torch.max(next_qs, dim=1)[0] * (1 - dones)
+        target = reward + .99 * torch.max(next_qs, dim=1)[0] * (1 - dones)
 
     return torch.mean((qs - target) ** 2)
 

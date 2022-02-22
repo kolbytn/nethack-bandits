@@ -27,6 +27,13 @@ class MonsterEnv:
         "STR": "strength",
         "POLYMORPH": "polymorph",
     }
+    QUESTIONS = [
+        "What resistance does eating a [monster] corpse confer?",
+        "What does eating a [monster] corpse confer?",
+        "What does a [monster] confer?",
+        "What happens when you eat a [monster] corpse?",
+        "What resistance does eating a [monster] confer?"
+    ]
     NUM_MONSTERS = 388
     NUM_EFFECTS = 5
 
@@ -68,8 +75,8 @@ class MonsterEnv:
 
         self.monster_choices = None
         self.goal = None
-        self.queries = np.zeros((2, self.NUM_EFFECTS, 5))
-        self.queried = np.zeros((2, self.NUM_EFFECTS))
+        self.queries = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
+        self.queried = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
 
     def reset(self, eval=False):
         if eval:
@@ -89,12 +96,13 @@ class MonsterEnv:
         )
         np.random.shuffle(self.monster_choices)
 
-        self.queries = np.zeros((2, self.NUM_EFFECTS, 5))
-        self.queried = np.zeros((2, self.NUM_EFFECTS))
+        self.queries = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
+        self.queried = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
         if self.feature == "full" or self.feature == "full_truth":
             for m in range(2):
                 for e in range(self.NUM_EFFECTS):
-                    self.query(m, e)
+                    for q in range(len(self.QUESTIONS)):
+                        self.query(m, e, q)
 
         obs = self.prepare_obs()         
 
@@ -107,9 +115,11 @@ class MonsterEnv:
 
         else:
             q = action - 2
-            m = int(q >= self.NUM_EFFECTS)
-            e = q - self.NUM_EFFECTS if q >= self.NUM_EFFECTS else q
-            self.query(m, e)
+            idx = np.zeros_like(self.queries).flatten()
+            idx[q] = 1
+            idx = np.reshape(idx, self.queries.shape)
+            idx = np.where(idx)
+            self.query(idx[0].item(), idx[1].item(), idx[2].item())
             
             reward = 0
             done = False
@@ -148,56 +158,25 @@ class MonsterEnv:
             obs["monster1"] = self.monster_choices[0] + "\n" + self.wiki[self.monster_choices[0]]
             obs["monster2"] = self.monster_choices[1] + "\n" + self.wiki[self.monster_choices[1]]
         elif self.feature in ["qa", "full", "truth", "full_truth"]:
-            obs["monster1"] = np.concatenate((self.queried[0], self.queries[0].flatten()))
-            obs["monster2"] = np.concatenate((self.queried[1], self.queries[1].flatten()))
+            obs["monster1"] = np.concatenate((self.queried[0].flatten(), self.queries[0].flatten()))
+            obs["monster2"] = np.concatenate((self.queried[1].flatten(), self.queries[1].flatten()))
         else:
             obs["monster1"] = list(self.all_monsters.keys()).index(self.monster_choices[0])
             obs["monster2"] = list(self.all_monsters.keys()).index(self.monster_choices[1])
 
         return obs
 
-    def query(self, m, e):
-        self.queried[m][e] = 1
+    def query(self, m, e, q):
+        self.queried[m][e][q] = 1
         if self.feature == "truth" or self.feature == "full_truth":
             monster = self.monster_choices[m]
             effect = list(self.all_effects.keys())[e]
-            self.queries[m][e] = int(effect in list(self.all_monsters[monster].keys()))
+            self.queries[m][e][q] = int(effect in list(self.all_monsters[monster].keys()))
         else:
-            q = "What resistance does eating a {} corpse confer? \\n {}".format(
-                self.monster_choices[m],
-                self.wiki[self.monster_choices[m]]
-            )        
-            a = self.run_qa_model(q)
-            self.queries[m][e][0] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-            
-            q = "What does eating a {} corpse confer? \\n {}".format(
-                self.monster_choices[m],
-                self.wiki[self.monster_choices[m]]
-            )        
-            a = self.run_qa_model(q)
-            self.queries[m][e][1] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-            
-            q = "What does a {} confer? \\n {}".format(
-                self.monster_choices[m],
-                self.wiki[self.monster_choices[m]]
-            )        
-            a = self.run_qa_model(q)
-            self.queries[m][e][2] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-            
-            q = "What happens when you eat a {} corpse? \\n {}".format(
-                self.monster_choices[m],
-                self.wiki[self.monster_choices[m]]
-            )        
-            a = self.run_qa_model(q)
-            self.queries[m][e][3] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-            
-            q = "What resistance does eating a {} confer? \\n {}".format(
-                self.monster_choices[m],
-                self.wiki[self.monster_choices[m]]
-            )        
-            a = self.run_qa_model(q)
-            self.queries[m][e][4] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-        
+            qry = self.QUESTIONS[q].replace("[monster]", self.monster_choices[m]) + \
+                " \\n " + self.wiki[self.monster_choices[m]]
+            a = self.run_qa_model(qry)
+            self.queries[m][e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
 
     @lru_cache(maxsize=NUM_MONSTERS*5)
     def run_qa_model(self, q):
