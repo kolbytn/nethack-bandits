@@ -12,16 +12,18 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
     env = MonsterEnv(feature=args.feature, seed=args.seed)
+
     if args.feature in ["bert", "t5"]:
-        model = LMQ(env.model.config.hidden_size, env.NUM_EFFECTS)
+        model = LMQ(env.model.config.hidden_size, env.NUM_EFFECTS, seed=args.seed)
     elif args.feature == "rnn":
-        model = RNNQ(env.NUM_EFFECTS)
+        model = RNNQ(env.NUM_EFFECTS, seed=args.seed)
     elif args.feature == "finetune":
-        model = FinetuneQ(env.NUM_EFFECTS)
+        model = FinetuneQ(env.NUM_EFFECTS, seed=args.seed)
     elif args.feature in ["qa", "truth"]:
-        model = QuestionAnswerQ(env.NUM_EFFECTS)
+        model = QuestionAnswerQ(env.NUM_EFFECTS, seed=args.seed)
     elif args.feature in ["full", "full_truth"]:
-        model = QuestionAnswerQ(env.NUM_EFFECTS, out_size=2)
+        model = QuestionAnswerQ(env.NUM_EFFECTS, out_size=2, seed=args.seed)
     else:
-        model = OneHotQ(env.NUM_MONSTERS, env.NUM_EFFECTS)
+        model = OneHotQ(env.NUM_MONSTERS, env.NUM_EFFECTS, seed=args.seed)
+
     train(env, model, seed=args.seed)

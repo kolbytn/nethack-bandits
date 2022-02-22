@@ -7,8 +7,9 @@ from transformers import T5Tokenizer, T5Model
 
 
 class RNNQ(nn.Module):
-    def __init__(self, goal_size, device="cuda"):
+    def __init__(self, goal_size, device="cuda", seed=42):
         super().__init__()
+        torch.random.manual_seed(seed)
 
         self.goal_size = goal_size
         self.out_size = 2
@@ -41,8 +42,9 @@ class RNNQ(nn.Module):
 
 
 class FinetuneQ(nn.Module):
-    def __init__(self, goal_size, device="cuda"):
+    def __init__(self, goal_size, device="cuda", seed=42):
         super().__init__()
+        torch.random.manual_seed(seed)
 
         self.goal_size = goal_size
         self.out_size = 2
@@ -74,8 +76,9 @@ class FinetuneQ(nn.Module):
 
 
 class OneHotQ(nn.Module):
-    def __init__(self, monster_size, goal_size, device="cuda"):
+    def __init__(self, monster_size, goal_size, device="cuda", seed=42):
         super().__init__()
+        torch.random.manual_seed(seed)
 
         self.monster_size = monster_size
         self.goal_size = goal_size
@@ -100,8 +103,9 @@ class OneHotQ(nn.Module):
 
 
 class LMQ(nn.Module):
-    def __init__(self, monster_size, goal_size, device="cuda"):
+    def __init__(self, monster_size, goal_size, device="cuda", seed=42):
         super().__init__()
+        torch.random.manual_seed(seed)
 
         self.monster_size = monster_size
         self.goal_size = goal_size
@@ -127,8 +131,9 @@ class LMQ(nn.Module):
         
 
 class QuestionAnswerQ(nn.Module):
-    def __init__(self, goal_size, device="cuda", out_size=None):
+    def __init__(self, goal_size, device="cuda", out_size=None, seed=42):
         super().__init__()
+        torch.random.manual_seed(seed)
 
         self.goal_size = goal_size
         self.out_size = 2 + 2 * self.goal_size if out_size is None else out_size

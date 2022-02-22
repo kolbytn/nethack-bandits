@@ -19,8 +19,7 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
     for train_step in tqdm(range(int(train_steps))):
         obs = env.reset()
         
-        done = False
-        while not done:
+        for _ in range(100):
             if random.random() < eps:
                 action = random.randint(0, model.out_size - 1)
             else:
@@ -34,17 +33,21 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
             replay.append((obs, action, reward, done, next_obs))
             obs = next_obs
 
+            if done:
+                break
+
         returns.append(reward)
 
         if train_step % eval_freq == 0:
             obs = env.reset(eval=True)
-            done = False
-            while not done:
+            for _ in range(100):
                 prepared_obs = prepare_obs(obs)
                 model.eval()
                 qs = model(prepared_obs)
                 action = torch.argmax(qs).item()
                 obs, reward, done, _ = env.step(action)
+                if done:
+                    break
             eval_returns.append(reward)
 
         if eps > eps_min:
@@ -58,16 +61,16 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
             optim.zero_grad()
             loss.backward()
             optim.step()
-            
+
         if train_step % target_update == 0 and env.feature in ["qa", "truth"]:
             target_model.load_state_dict(model.state_dict())
 
         if train_step % smooth == 0:
             if len(returns) > smooth:
-                # graph("returns_{}_{}.png".format(env.feature, seed), returns, smooth)
+                graph("returns_{}_{}.png".format(env.feature, seed), returns, smooth)
                 log("returns_{}_{}.txt".format(env.feature, seed), returns)
             if len(eval_returns) > smooth:
-                # graph("eval_returns_{}_{}.png".format(env.feature, seed), eval_returns, smooth)
+                graph("eval_returns_{}_{}.png".format(env.feature, seed), eval_returns, smooth)
                 log("eval_returns_{}_{}.txt".format(env.feature, seed), eval_returns)
 
 
