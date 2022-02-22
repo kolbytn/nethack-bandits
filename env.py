@@ -139,17 +139,20 @@ class MonsterEnv:
         }   
         
         if self.feature == "bert":
-            obs["monster1_info"] = self.run_bert_model(self.monster_choices[0])
-            obs["monster2_info"] = self.run_bert_model(self.monster_choices[1])
+            obs["monster1"] = self.run_bert_model(self.monster_choices[0])
+            obs["monster2"] = self.run_bert_model(self.monster_choices[1])
         elif self.feature == "t5":
-            obs["monster1_info"] = self.run_t5_model(self.monster_choices[0])
-            obs["monster2_info"] = self.run_t5_model(self.monster_choices[1])
+            obs["monster1"] = self.run_t5_model(self.monster_choices[0])
+            obs["monster2"] = self.run_t5_model(self.monster_choices[1])
+        elif self.feature in ["rnn", "finetune"]:
+            obs["monster1"] = self.monster_choices[0] + "\n" + self.wiki[self.monster_choices[0]]
+            obs["monster2"] = self.monster_choices[1] + "\n" + self.wiki[self.monster_choices[1]]
         elif self.feature in ["qa", "full", "truth", "full_truth"]:
-            obs["monster1_qa"] = np.concatenate((self.queried[0], self.queries[0].flatten()))
-            obs["monster2_qa"] = np.concatenate((self.queried[1], self.queries[1].flatten()))
+            obs["monster1"] = np.concatenate((self.queried[0], self.queries[0].flatten()))
+            obs["monster2"] = np.concatenate((self.queried[1], self.queries[1].flatten()))
         else:
-            obs["monster1_id"] = list(self.all_monsters.keys()).index(self.monster_choices[0])
-            obs["monster2_id"] = list(self.all_monsters.keys()).index(self.monster_choices[1])
+            obs["monster1"] = list(self.all_monsters.keys()).index(self.monster_choices[0])
+            obs["monster2"] = list(self.all_monsters.keys()).index(self.monster_choices[1])
 
         return obs
 

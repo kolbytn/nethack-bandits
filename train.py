@@ -64,10 +64,10 @@ def train(env, model, train_steps=1e5, replay_size=1e4, train_start=1000, target
 
         if train_step % smooth == 0:
             if len(returns) > smooth:
-                graph("returns_{}_{}.png".format(env.feature, seed), returns, smooth)
+                # graph("returns_{}_{}.png".format(env.feature, seed), returns, smooth)
                 log("returns_{}_{}.txt".format(env.feature, seed), returns)
             if len(eval_returns) > smooth:
-                graph("eval_returns_{}_{}.png".format(env.feature, seed), eval_returns, smooth)
+                # graph("eval_returns_{}_{}.png".format(env.feature, seed), eval_returns, smooth)
                 log("eval_returns_{}_{}.txt".format(env.feature, seed), eval_returns)
 
 
