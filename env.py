@@ -104,7 +104,7 @@ class MonsterEnv:
                     for q in range(len(self.QUESTIONS)):
                         self.query(m, e, q)
 
-        obs = self.prepare_obs()         
+        obs = self.prepare_obs(self.goal, self.monster_choices[0], self.monster_choices[1])         
 
         return obs
 
@@ -124,7 +124,7 @@ class MonsterEnv:
             reward = 0
             done = False
 
-        obs = self.prepare_obs()
+        obs = self.prepare_obs(self.goal, self.monster_choices[0], self.monster_choices[1])
         info = {
             "goal": self.goal,
             "monster_choices": self.monster_choices,
@@ -143,26 +143,26 @@ class MonsterEnv:
                         effects[e][m] = monsters[m][e]
         return effects
 
-    def prepare_obs(self):
+    def prepare_obs(self, goal, monster1, monster2):
         obs = {
-            "goal": list(self.all_effects.keys()).index(self.goal),
+            "goal": list(self.all_effects.keys()).index(goal),
         }   
         
         if self.feature == "bert":
-            obs["monster1"] = self.run_bert_model(self.monster_choices[0])
-            obs["monster2"] = self.run_bert_model(self.monster_choices[1])
+            obs["monster1"] = self.run_bert_model(monster1)
+            obs["monster2"] = self.run_bert_model(monster2)
         elif self.feature == "t5":
-            obs["monster1"] = self.run_t5_model(self.monster_choices[0])
-            obs["monster2"] = self.run_t5_model(self.monster_choices[1])
+            obs["monster1"] = self.run_t5_model(monster1)
+            obs["monster2"] = self.run_t5_model(monster2)
         elif self.feature in ["rnn", "finetune"]:
-            obs["monster1"] = self.monster_choices[0] + "\n" + self.wiki[self.monster_choices[0]]
-            obs["monster2"] = self.monster_choices[1] + "\n" + self.wiki[self.monster_choices[1]]
+            obs["monster1"] = monster1 + "\n" + self.wiki[monster1]
+            obs["monster2"] = monster2 + "\n" + self.wiki[monster2]
         elif self.feature in ["qa", "full", "truth", "full_truth"]:
-            obs["monster1"] = np.concatenate((self.queried[0].flatten(), self.queries[0].flatten()))
-            obs["monster2"] = np.concatenate((self.queried[1].flatten(), self.queries[1].flatten()))
+            obs["monster1"] = np.concatenate((self.get_queried(monster1), self.get_queries(monster1)))
+            obs["monster2"] = np.concatenate((self.get_queried(monster2), self.get_queries(monster2)))
         else:
-            obs["monster1"] = list(self.all_monsters.keys()).index(self.monster_choices[0])
-            obs["monster2"] = list(self.all_monsters.keys()).index(self.monster_choices[1])
+            obs["monster1"] = list(self.all_monsters.keys()).index(monster1)
+            obs["monster2"] = list(self.all_monsters.keys()).index(monster2)
 
         return obs
 
@@ -177,6 +177,46 @@ class MonsterEnv:
                 " \\n " + self.wiki[self.monster_choices[m]]
             a = self.run_qa_model(qry)
             self.queries[m][e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+
+    def get_queried(self, monster):
+        if monster in self.monster_choices:
+            return self.queried[self.monster_choices.index(monster)].flatten()
+        else:
+            return np.ones_like(self.queried[0]).flatten()
+
+    def get_queries(self, monster):
+        if monster in self.monster_choices:
+            return self.queries[self.monster_choices.index(monster)].flatten()
+        else:
+            queries = np.zeros((self.NUM_EFFECTS, len(self.QUESTIONS)))
+            for e in range(self.NUM_EFFECTS):
+                for q in range(len(self.QUESTIONS)):
+                    if self.feature == "truth" or self.feature == "full_truth":
+                        effect = list(self.all_effects.keys())[e]
+                        queries[e][q] = int(effect in list(self.all_monsters[monster].keys()))
+                    else:
+                        qry = self.QUESTIONS[q].replace("[monster]", monster) + \
+                            " \\n " + self.wiki[monster]
+                        a = self.run_qa_model(qry)
+                        queries[e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+            return queries.flatten()
+
+    def get_policy(self, eval=False):
+        monsters = self.eval_monsters if eval else self.train_monsters
+        effects = self.eval_effects if eval else self.train_effects
+
+        obs = []
+        act = []
+        for effect, target_monsters in effects.items():
+            for monster1 in target_monsters:
+                for monster2 in monsters:
+                    if monster2 not in target_monsters:
+                        obs.append(self.prepare_obs(effect, monster1, monster2))
+                        obs.append(self.prepare_obs(effect, monster2, monster1))
+                        act.append(0)
+                        act.append(1)
+
+        return obs, act
 
     @lru_cache(maxsize=NUM_MONSTERS*5)
     def run_qa_model(self, q):
