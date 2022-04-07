@@ -2,7 +2,7 @@ import json
 from functools import lru_cache
 import numpy as np
 import torch
-from transformers import BertTokenizer, BertModel, T5Tokenizer, T5ForConditionalGeneration, T5Model
+from transformers import T5Tokenizer, T5ForConditionalGeneration, T5Model
 
 
 class MonsterEnv:
@@ -57,15 +57,11 @@ class MonsterEnv:
         self.device = device
         self.feature = feature
 
-        if self.feature == "bert":
-            self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-            self.model = BertModel.from_pretrained('bert-base-uncased', return_dict=True).to(device)
-            self.model.requires_grad = False
-        elif self.feature == "t5":
+        if self.feature == "t5":
             self.tokenizer = T5Tokenizer.from_pretrained("t5-3b")
             self.model = T5Model.from_pretrained("t5-3b", return_dict=True).to(device)
             self.model.requires_grad = False
-        elif self.feature == "qa" or self.feature == "full":
+        elif self.feature == "qa":
             self.tokenizer = T5Tokenizer.from_pretrained("allenai/unifiedqa-t5-3b")
             self.model = T5ForConditionalGeneration.from_pretrained("allenai/unifiedqa-t5-3b").to(device)
             self.model.requires_grad = False
@@ -75,8 +71,8 @@ class MonsterEnv:
 
         self.monster_choices = None
         self.goal = None
-        self.queries = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
-        self.queried = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
+
+        self.queries = self.get_queries()
 
     def reset(self, eval=False):
         if eval:
@@ -96,34 +92,13 @@ class MonsterEnv:
         )
         np.random.shuffle(self.monster_choices)
 
-        self.queries = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
-        self.queried = np.zeros((2, self.NUM_EFFECTS, len(self.QUESTIONS)))
-        if self.feature == "full" or self.feature == "full_truth":
-            for m in range(2):
-                for e in range(self.NUM_EFFECTS):
-                    for q in range(len(self.QUESTIONS)):
-                        self.query(m, e, q)
-
         obs = self.prepare_obs(self.goal, self.monster_choices[0], self.monster_choices[1])         
 
         return obs
 
     def step(self, action):
-        if action < 2:
-            reward = int(self.goal in self.all_monsters[self.monster_choices[action]])
-            done = True
-
-        else:
-            q = action - 2
-            idx = np.zeros_like(self.queries).flatten()
-            idx[q] = 1
-            idx = np.reshape(idx, self.queries.shape)
-            idx = np.where(idx)
-            self.query(idx[0].item(), idx[1].item(), idx[2].item())
-            
-            reward = 0
-            done = False
-
+        reward = int(self.goal in self.all_monsters[self.monster_choices[action]])
+        done = True
         obs = self.prepare_obs(self.goal, self.monster_choices[0], self.monster_choices[1])
         info = {
             "goal": self.goal,
@@ -148,75 +123,43 @@ class MonsterEnv:
             "goal": list(self.all_effects.keys()).index(goal),
         }   
         
-        if self.feature == "bert":
-            obs["monster1"] = self.run_bert_model(monster1)
-            obs["monster2"] = self.run_bert_model(monster2)
-        elif self.feature == "t5":
+        if self.feature == "t5":
             obs["monster1"] = self.run_t5_model(monster1)
             obs["monster2"] = self.run_t5_model(monster2)
-        elif self.feature in ["rnn", "finetune"]:
+        elif self.feature == "rnn":
             obs["monster1"] = monster1 + "\n" + self.wiki[monster1]
             obs["monster2"] = monster2 + "\n" + self.wiki[monster2]
-        elif self.feature in ["qa", "full", "truth", "full_truth"]:
-            obs["monster1"] = np.concatenate((self.get_queried(monster1), self.get_queries(monster1)))
-            obs["monster2"] = np.concatenate((self.get_queried(monster2), self.get_queries(monster2)))
+        elif self.feature == "qa":
+            obs["monster1"] = self.get_monster_qa(monster1)
+            obs["monster2"] = self.get_monster_qa(monster1)
+        elif self.feature == "truth":
+            obs["monster1"] = self.get_monster_truth(monster1)
+            obs["monster2"] = self.get_monster_truth(monster1)
         else:
             obs["monster1"] = list(self.all_monsters.keys()).index(monster1)
             obs["monster2"] = list(self.all_monsters.keys()).index(monster2)
 
         return obs
 
-    def query(self, m, e, q):
-        self.queried[m][e][q] = 1
-        if self.feature == "truth" or self.feature == "full_truth":
-            monster = self.monster_choices[m]
-            effect = list(self.all_effects.keys())[e]
-            self.queries[m][e][q] = int(effect in list(self.all_monsters[monster].keys()))
-        else:
-            qry = self.QUESTIONS[q].replace("[monster]", self.monster_choices[m]) + \
-                " \\n " + self.wiki[self.monster_choices[m]]
+    @lru_cache(maxsize=NUM_MONSTERS)
+    def get_monster_truth(self, monster):
+        queries = np.zeros((self.NUM_EFFECTS, len(self.QUESTIONS)))
+        for e in range(self.NUM_EFFECTS):
+            for q in range(len(self.QUESTIONS)):
+                effect = list(self.all_effects.keys())[e]
+                queries[e][q] = int(effect in list(self.all_monsters[monster].keys()))
+        return queries
+
+    @lru_cache(maxsize=NUM_MONSTERS)
+    def get_monster_qa(self, monster):
+        queries = np.zeros((self.NUM_EFFECTS, len(self.QUESTIONS)))
+        for q in range(len(self.QUESTIONS)):
+            qry = self.QUESTIONS[q].replace("[monster]", monster) + \
+                " \\n " + self.wiki[monster]
             a = self.run_qa_model(qry)
-            self.queries[m][e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-
-    def get_queried(self, monster):
-        if monster in self.monster_choices:
-            return self.queried[self.monster_choices.index(monster)].flatten()
-        else:
-            return np.ones_like(self.queried[0]).flatten()
-
-    def get_queries(self, monster):
-        if monster in self.monster_choices:
-            return self.queries[self.monster_choices.index(monster)].flatten()
-        else:
-            queries = np.zeros((self.NUM_EFFECTS, len(self.QUESTIONS)))
             for e in range(self.NUM_EFFECTS):
-                for q in range(len(self.QUESTIONS)):
-                    if self.feature == "truth" or self.feature == "full_truth":
-                        effect = list(self.all_effects.keys())[e]
-                        queries[e][q] = int(effect in list(self.all_monsters[monster].keys()))
-                    else:
-                        qry = self.QUESTIONS[q].replace("[monster]", monster) + \
-                            " \\n " + self.wiki[monster]
-                        a = self.run_qa_model(qry)
-                        queries[e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
-            return queries.flatten()
-
-    def get_policy(self, eval=False):
-        monsters = self.eval_monsters if eval else self.train_monsters
-        effects = self.eval_effects if eval else self.train_effects
-
-        obs = []
-        act = []
-        for effect, target_monsters in effects.items():
-            for monster1 in target_monsters:
-                for monster2 in monsters:
-                    if monster2 not in target_monsters:
-                        obs.append(self.prepare_obs(effect, monster1, monster2))
-                        obs.append(self.prepare_obs(effect, monster2, monster1))
-                        act.append(0)
-                        act.append(1)
-
-        return obs, act
+                queries[e][q] = int(self.EFFECT2STR[list(self.all_effects.keys())[e]] in a)
+        return queries
 
     @lru_cache(maxsize=NUM_MONSTERS*5)
     def run_qa_model(self, q):
@@ -231,11 +174,3 @@ class MonsterEnv:
             monster_info = self.tokenizer(monster + "\n" + self.wiki[monster], return_tensors="pt").input_ids
             monster_info = self.model(input_ids=monster_info.to(self.device), decoder_input_ids=monster_info.to(self.device))
             return monster_info.last_hidden_state[0, 0].cpu().detach().numpy()
-
-    @lru_cache(maxsize=NUM_MONSTERS)
-    def run_bert_model(self, monster):
-        with torch.no_grad():
-            monster1_info = self.tokenizer([
-                monster + "\n" + self.wiki[monster]
-            ], return_tensors="pt", padding=True, truncation=True)
-            return self.model(**monster1_info.to(self.device)).last_hidden_state[0, 0].cpu().detach().numpy()

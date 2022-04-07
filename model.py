@@ -1,9 +1,8 @@
 import torch
-from torchtext.data.utils import get_tokenizer
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from transformers import T5Tokenizer, T5Model
+from transformers import T5Tokenizer
 
 
 class RNNQ(nn.Module):
@@ -41,67 +40,6 @@ class RNNQ(nn.Module):
         return self.monster_encoder(torch.cat((goal, monster1, monster2), dim=-1).float())
 
 
-class FinetuneQ(nn.Module):
-    def __init__(self, goal_size, device="cuda", seed=42):
-        super().__init__()
-        torch.random.manual_seed(seed)
-
-        self.goal_size = goal_size
-        self.out_size = 2
-        self.device = device
-        hidden_size = 32
-
-        self.tokenizer = T5Tokenizer.from_pretrained("t5-small")
-        self.model = T5Model.from_pretrained("t5-small", return_dict=True).to(device)
-        self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size + self.model.config.hidden_size * 2, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, self.out_size)
-        ).to(device)
-
-    def forward(self, obs):
-        goal = F.one_hot(torch.tensor(obs["goal"]).long(), num_classes=self.goal_size).to(self.device)
-        
-        monster1 = self.tokenizer(obs["monster1"], return_tensors="pt", padding=True, truncation=True).input_ids.to(self.device)
-        monster1 = self.model(input_ids=monster1, decoder_input_ids=monster1)
-        monster1 = monster1.last_hidden_state[:, 0]
-        
-        monster2 = self.tokenizer(obs["monster2"], return_tensors="pt", padding=True, truncation=True).input_ids.to(self.device)
-        monster2 = self.model(input_ids=monster2, decoder_input_ids=monster2)
-        monster2 = monster2.last_hidden_state[:, 0]
-        
-        return self.monster_encoder(torch.cat((goal, monster1, monster2), dim=-1).float())
-
-
-class OneHotQ(nn.Module):
-    def __init__(self, monster_size, goal_size, device="cuda", seed=42):
-        super().__init__()
-        torch.random.manual_seed(seed)
-
-        self.monster_size = monster_size
-        self.goal_size = goal_size
-        self.out_size = 2
-        self.device = device
-        hidden_size = 32
-
-        self.monster_encoder = nn.Sequential(
-            nn.Linear(self.goal_size + self.monster_size * 2, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, self.out_size)
-        ).to(device)
-
-    def forward(self, obs):
-        goal = F.one_hot(torch.tensor(obs["goal"]).long(), num_classes=self.goal_size).to(self.device)
-        monster1_id = F.one_hot(torch.tensor(obs["monster1"]).long(), num_classes=self.monster_size).to(self.device)
-        monster2_id = F.one_hot(torch.tensor(obs["monster2"]).long(), num_classes=self.monster_size).to(self.device)
-        
-        return self.monster_encoder(torch.cat((goal, monster1_id, monster2_id), dim=-1).float())
-
-
 class LMQ(nn.Module):
     def __init__(self, monster_size, goal_size, device="cuda", seed=42):
         super().__init__()
@@ -136,7 +74,7 @@ class QuestionAnswerQ(nn.Module):
         torch.random.manual_seed(seed)
 
         self.goal_size = goal_size
-        self.out_size = 2 + 2 * q_size * self.goal_size if out_size is None else out_size
+        self.out_size = 2 + q_size * self.goal_size if out_size is None else out_size
         self.device = device
         hidden_size = 32
 
