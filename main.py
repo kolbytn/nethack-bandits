@@ -17,6 +17,8 @@ if __name__ == "__main__":
         model = LMQ(env.model.config.hidden_size, env.NUM_EFFECTS, seed=args.seed)
     elif args.feature == "rnn":
         model = RNNQ(env.NUM_EFFECTS, seed=args.seed)
+    elif args.feature in ["ir"]:
+        model = LMQ(env.model.config.hidden_size, env.NUM_EFFECTS, seed=args.seed)
     elif args.feature in ["qa"]:
         model = QuestionAnswerQ(env.NUM_EFFECTS, q_size=len(env.QUESTIONS), out_size=2, seed=args.seed)
 
